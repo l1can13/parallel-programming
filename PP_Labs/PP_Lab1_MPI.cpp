@@ -37,7 +37,7 @@
 //
 //int main(int argc, char* argv[])
 //{
-//	omp_set_num_threads(16);
+//	omp_set_num_threads(12);
 //	int nThreads, threadNum;
 //	double start_time, end_time;
 //
