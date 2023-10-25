@@ -97,37 +97,46 @@
 //#include "stdio.h"
 //
 //int main(int argc, char* argv[]) {
-//	int num_proccesses[3] = {2, 4, 8};
+//	int num_proccesses[3] = { 2, 4, 8 };
+//	double time = 0.0;
+//
 //
 //	for (int k = 0; k < 3; ++k) {
-//		printf("\nNum proccesses = %d", num_proccesses[k]);
-//		omp_set_num_threads(num_proccesses[k]);
-//		int i, j;
-//		int* a = new int[NMAX];
-//		double sum;
-//		int Q = 22;
-//		for (i = 0; i < NMAX; i++) {
-//			a[i] = 1.0;
-//		}
-//		double st_time, end_time;
-//		st_time = omp_get_wtime();
-//		sum = 0;
+//		time = 0.0;
+//
+//		for (int l = 0; l < 12; ++l) {
+//			printf("\n\nNum proccesses = %d", num_proccesses[k]);
+//			omp_set_num_threads(num_proccesses[k]);
+//			int i, j;
+//			int* a = new int[NMAX];
+//			double sum;
+//			int Q = 22;
+//			for (i = 0; i < NMAX; i++) {
+//				a[i] = 1.0;
+//			}
+//			double st_time, end_time;
+//			st_time = omp_get_wtime();
+//			sum = 0;
 //
 //#pragma omp parallel for shared(a) private(i, j) reduction(+:sum)
-//		for (i = 0; i < NMAX; i++) {
-//			for (j = 0; j < Q; j++) {
-//				a[i] = (a[i] + a[i]) / 2;
+//			for (i = 0; i < NMAX; i++) {
+//				for (j = 0; j < Q; j++) {
+//					a[i] = (a[i] + a[i]) / 2;
+//				}
+//				//#pragma omp atomic
+//				//#pragma omp critical
+//				sum += a[i];
 //			}
-////#pragma omp atomic
-////#pragma omp critical
-//			sum += a[i];
+//			end_time = omp_get_wtime();
+//			end_time = end_time - st_time;
+//			printf("\nQ = %d", Q);
+//			printf("\nTotal Sum = %10.2f", sum);
+//			printf("\nTIME OF WORK IS %f ", end_time);
+//			time += end_time;
+//			delete[] a;
 //		}
-//		end_time = omp_get_wtime();
-//		end_time = end_time - st_time;
-//		printf("\nQ = %d", Q);
-//		printf("\nTotal Sum = %10.2f", sum);
-//		printf("\nTIME OF WORK IS %f ", end_time);
-//		delete[] a;
+//
+//		printf("\n\nNum Proccesses: %d\nAvg time for 12 starts: %f ", num_proccesses[k], (time / 12));
 //	}
 //
 //	return 0;
@@ -162,7 +171,7 @@
 //		}
 //	}
 //	int* x_loc = new int[N / ProcNum];
-//	MPI_Scatter(x, N / ProcNum, MPI_FLOAT, x_loc, N / ProcNum, MPI_FLOAT, 0, MPI_COMM_WORLD);
+//	MPI_Scatter(x, N / ProcNum, MPI_INT, x_loc, N / ProcNum, MPI_INT, 0, MPI_COMM_WORLD);
 //	st_time = MPI_Wtime();
 //
 //
@@ -174,18 +183,18 @@
 //	}
 //
 //	TotalSum = 0;
-//	MPI_Reduce(&ProcSum, &TotalSum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+//	MPI_Reduce(&ProcSum, &TotalSum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 //	if (ProcRank == 0)
 //	{
 //		TotalSum = ProcSum;
 //		for (i = 1; i < ProcNum; i++)
 //		{
-//			MPI_Recv(&ProcSum, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &Status);
+//			MPI_Recv(&ProcSum, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &Status);
 //			TotalSum = TotalSum + ProcSum;
 //		}
 //	}
 //	else
-//		MPI_Send(&ProcSum, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+//		MPI_Send(&ProcSum, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 //
 //	MPI_Barrier(MPI_COMM_WORLD);
 //
@@ -212,18 +221,22 @@ int main(int argc, char* argv[]) {
 	int i, j, N = 7600000;
 	int* x = new int[N];
 	double sum = 0;
+
 	for (int i = 0; i < N; ++i) {
 		x[i] = 1.0;
 	}
+
 	double start = clock();
-	for (i = 0; i < N; ++i) {
-		for (j = 0; j < Q; ++j) {
+	for (int k = 0; k < 12; ++k) {
+		sum = 0.0;
+		for (i = 0; i < N; ++i) {
+			/*for (j = 0; j < Q; ++j) {
+				x[i] = (x[i] * 2) / 2;
+			}*/
 			sum += x[i];
 		}
 	}
-	//sum /= Q;
 	double end = clock();
 	double t = (end - start) / CLOCKS_PER_SEC;
-	printf("Sum: %f\n", sum);
-	printf("Time: %f", t);
+	printf("\nTime: %f", t / 12);
 }
