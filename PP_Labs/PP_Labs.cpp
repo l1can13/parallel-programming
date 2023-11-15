@@ -258,9 +258,10 @@
 
 // Sequential
 
-//#define CHUNK 100 
+//#define CHUNK 100
 //#define NMAX 7600000
 //#define Q 22
+////#define Q 1
 //#define NUM_OF_THREADS 4
 //
 //#include <omp.h>
@@ -310,7 +311,7 @@
 //#define CHUNK 100 
 //#define NMAX 7600000
 //#define Q 22
-//#define NUM_OF_THREADS 8
+////#define Q 1
 //#include <omp.h>
 //#include <cstdlib>
 //#include <time.h>
@@ -320,49 +321,53 @@
 //	int* a = new int[NMAX];
 //	int* b = new int[NMAX];
 //	int* sum = new int[NMAX];
-//	int chunk, n, i, step, t, j, q, num;
+//	int chunk, n, i, step, t, j, q, proccesses[3]{ 2, 4, 8 };
 //	chunk = CHUNK;
 //	n = NMAX;
 //	q = Q;
-//	num = NUM_OF_THREADS;
-//	omp_set_num_threads(num); // 2, 4, 8
 //	//<инициализация данных>
 //	for (i = 0; i < n; ++i) {
 //		a[i] = i;
 //		b[i] = i;
 //	}
 //	double start_time, end_time, result_time = 0.0;
-//	for (t = 0; t < 12; t++) {
-//		start_time = omp_get_wtime();
-//		//параллельное выполнение
+//
+//	for (int k = 0; k < 3; ++k) {
+//		result_time = 0.0;
+//		omp_set_num_threads(proccesses[k]);
+//		for (t = 0; t < 12; t++) {
+//			start_time = omp_get_wtime();
+//			//параллельное выполнение
 ////#pragma omp parallel for shared (a,b,sum) schedule(static, chunk)
-////		for (i = 0; i < n; ++i) {
-////			for (j = 0; j < q; ++j) {
-////				sum[i] = a[i] + b[i];
+////			for (i = 0; i < n; ++i) {
+////				for (j = 0; j < q; ++j) {
+////					sum[i] = a[i] + b[i];
+////				}
 ////			}
-////		}
+//
 ////#pragma omp parallel for shared (a,b,sum) schedule(dynamic, chunk)
-////		for (i = 0; i < n; ++i) {
-////			for (j = 0; j < q; ++j) {
-////				sum[i] = a[i] + b[i];
+////			for (i = 0; i < n; ++i) {
+////				for (j = 0; j < q; ++j) {
+////					sum[i] = a[i] + b[i];
+////				}
 ////			}
-////		}
 //
 //#pragma omp parallel for shared (a,b,sum) schedule(guided, chunk)
-//		for (i = 0; i < n; ++i) {
-//			for (j = 0; j < q; ++j) {
-//				sum[i] = a[i] + b[i];
+//			for (i = 0; i < n; ++i) {
+//				for (j = 0; j < q; ++j) {
+//					sum[i] = a[i] + b[i];
+//				}
 //			}
-//		}
-//		end_time = omp_get_wtime();
+//			end_time = omp_get_wtime();
 //
-//		result_time += end_time - start_time;
+//			result_time += end_time - start_time;
+//		}
+//		printf("OpenMP program working on %d processes", proccesses[k]);
+//		printf("\nQ: %d", q);
+//		//printf("\nTime of work STATIC program: %f \n\n", result_time / 12);
+//		//printf("\nTime of work DYNAMIC program: %f \n\n", result_time / 12);
+//		printf("\nTime of work GUIDED program: %f \n\n", result_time / 12);
 //	}
-//	printf("OpenMP program working on %d process", num);
-//	printf("\nQ: %d", q);
-//	//printf("\nTime of work STATIC program: %f ", result_time / 12);
-//	//printf("\nTime of work DYNAMIC program: %f ", result_time / 12);
-//	printf("\nTime of work GUIDED program: %f ", result_time / 12);
 //	delete[] a;
 //	delete[] b;
 //	delete[] sum;
@@ -378,7 +383,9 @@
 //#include <ctime>
 //
 //#define NMAX 7600000
+////#define NMAX 7600013
 //#define Q 22
+////#define Q 1
 //
 //int main(int argc, char* argv[])
 //{
@@ -452,8 +459,10 @@
 //#include <stdlib.h>
 //#include <ctime>
 //
-//#define NMAX 7600000
-//#define Q 22
+////#define NMAX 7600000
+//#define NMAX 7600013
+////#define Q 22
+//#define Q 1
 //
 //int main(int argc, char* argv[])
 //{
@@ -527,7 +536,6 @@
 //		printf("\nAmount of counting: %d", q);
 //		printf("\nTime from work is %f\n", average_time / 12.0);
 //		delete[] c;
-//
 //	}
 //
 //	delete[] a_loc;
@@ -540,5 +548,230 @@
 //
 //	return 0;
 //}
+
+#pragma endregion
+
+#pragma region Лабораторная работа 4
+
+// CUDA
+
+//#include <cublas_v2.h>
+//#include <malloc.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//
+//
+//__global__ void addKernel(int* c, int* a, int* b, unsigned int size)
+//{
+//    int index = threadIdx.x + blockIdx.x * blockDim.x;
+//    for (; index < size; index += (blockDim.x * gridDim.x)) {
+//        c[index] = a[index] + b[index];
+//    }
+//}
+//
+//#define kernel addKernel
+//#define GRID_SIZE 1024
+//#define BLOCK_SIZE 1024
+//#define N 7600000
+//
+//
+//int main(int argc, char* argv[])
+//{
+//
+//    int n = N;
+//
+//    printf("n = %d\n", n);
+//
+//    int n2b = n * sizeof(int);
+//    int n2 = n;
+//
+//    // Выделение памяти на хосте
+//    int* a = (int*)calloc(n2, sizeof(int));
+//    int* b = (int*)calloc(n2, sizeof(int));
+//    int* c = (int*)calloc(n2, sizeof(int));
+//    // Инициализация массивов
+//    for (int i = 0; i < n; i++) {
+//        a[i] = 1;
+//        b[i] = 1;
+//    }
+//
+//    // Выделение памяти на устройстве
+//    int* adev = NULL;
+//    cudaError_t cuerr = cudaMalloc((void**)&adev, n2b);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot allocate device array for a: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    int* bdev = NULL;
+//    cuerr = cudaMalloc((void**)&bdev, n2b);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot allocate device array for b: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    int* cdev = NULL;
+//    cuerr = cudaMalloc((void**)&cdev, n2b);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot allocate device array for c: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    // Создание обработчиков событий
+//    cudaEvent_t start, stop;
+//    float gpuTime = 0.0f;
+//    cuerr = cudaEventCreate(&start);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot create CUDA start event: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    cuerr = cudaEventCreate(&stop);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot create CUDA end event: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    // Копирование данных с хоста на девайс
+//    cuerr = cudaMemcpy(adev, a, n2b, cudaMemcpyHostToDevice);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot copy a array from host to device: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    cuerr = cudaMemcpy(bdev, b, n2b, cudaMemcpyHostToDevice);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot copy b array from host to device: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    // Установка точки старта
+//    cuerr = cudaEventRecord(start, 0);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot record CUDA event: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    //Запуск ядра
+//    for (int i = 0; i < 12; ++i) {
+//        kernel << < GRID_SIZE, BLOCK_SIZE >> > (cdev, adev, bdev, n);
+//    }
+//
+//    cuerr = cudaGetLastError();
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot launch CUDA kernel: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    // Синхронизация устройств
+//    cuerr = cudaDeviceSynchronize();
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot synchronize CUDA kernel: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    // Установка точки окончания
+//    cuerr = cudaEventRecord(stop, 0);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot copy c array from device to host: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    // Копирование результата на хост
+//    cuerr = cudaMemcpy(c, cdev, n2b, cudaMemcpyDeviceToHost);
+//    if (cuerr != cudaSuccess)
+//    {
+//        fprintf(stderr, "Cannot copy c array from device to host: %s\n",
+//            cudaGetErrorString(cuerr));
+//        return 0;
+//    }
+//
+//    // Расчет времени
+//    cuerr = cudaEventElapsedTime(&gpuTime, start, stop);
+//    printf("time spent executing %s: %.9f seconds\n", "kernel", (gpuTime / 1000) / 12);
+//
+//    // Очищение памяти
+//    cudaEventDestroy(start);
+//    cudaEventDestroy(stop);
+//    cudaFree(adev);
+//    cudaFree(bdev);
+//    cudaFree(cdev);
+//    free(a);
+//    free(b);
+//    free(c);
+//
+//    return 0;
+//}
+
+// Sequential
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define N 7600000
+
+void addArrays(int* c, const int* a, const int* b, unsigned int size) {
+	for (unsigned int i = 0; i < size; ++i) {
+		c[i] = a[i] + b[i];
+	}
+}
+
+int main() {
+	int n = N;
+	printf("n = %u\n", n);
+
+	int* a = (int*)malloc(n * sizeof(int));
+	int* b = (int*)malloc(n * sizeof(int));
+	int* c = (int*)malloc(n * sizeof(int));
+
+	// Инициализация массивов
+	for (unsigned int i = 0; i < n; ++i) {
+		a[i] = 1;
+		b[i] = 1;
+	}
+
+	// Замер времени выполнения
+	clock_t start_time = clock();
+
+	// Запуск ядра
+	for (int i = 0; i < 12; ++i) {
+		addArrays(c, a, b, n);
+	}
+
+	clock_t end_time = clock();
+	double elapsed_time = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
+
+	printf("Time spent executing kernel: %.9f seconds\n", elapsed_time);
+
+	// Очищение памяти
+	free(a);
+	free(b);
+	free(c);
+
+	return 0;
+}
 
 #pragma endregion

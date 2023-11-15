@@ -18,5 +18,9 @@
     <ClCompile Include="PP_Labs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sequential.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="lab_4.cu" />
   </ItemGroup>
 </Project>
