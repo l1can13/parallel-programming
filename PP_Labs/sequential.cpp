@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define N 950000
+#define N 7600000
 
 void addArrays(int* c, const int* a, const int* b, unsigned int size) {
 	for (unsigned int i = 0; i < size; ++i) {
